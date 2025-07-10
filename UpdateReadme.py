@@ -1,16 +1,15 @@
 import os
 
 # === Config ===
-IMAGE_FOLDERS = ["Anime","cgi3d","Landscape","Painting","Pokemon"] # List your folders here
-README_FILE = "Readme.md"
+IMAGE_FOLDERS = ["Anime", "cgi3d", "Landscape", "Painting", "Pokemon"]
+README_FILE = "README.md"
 IMAGE_EXTS = (".jpg", ".jpeg", ".png", ".webp", ".gif")
 
 def get_images(folder):
     """Get all supported image files from the folder."""
-    return sorted([
-        f for f in os.listdir(folder)
-        if f.lower().endswith(IMAGE_EXTS)
-    ])
+    return sorted(
+        [f for f in os.listdir(folder) if f.lower().endswith(IMAGE_EXTS)]
+    )
 
 def format_title(folder_name):
     """Turn folder name into a markdown heading."""
@@ -40,7 +39,7 @@ def generate_table(images, folder, columns=3):
     return ''.join(html)
 
 def generate_section(folder):
-    """Generate full markdown section with title and table for one folder."""
+    """Generate full markdown section with title and latest image table for one folder."""
     if not os.path.isdir(folder):
         print(f"❌ Folder does not exist: {folder}")
         return ""
@@ -50,8 +49,9 @@ def generate_section(folder):
         print(f"⚠️ No images in folder: {folder}")
         return ""
 
+    latest_images = images[-6:]  # Get last 6 images by filename
     section = format_title(folder) + "\n\n"
-    section += generate_table(images, folder, columns=3) + "\n"
+    section += generate_table(latest_images, folder, columns=3) + "\n"
     return section
 
 def update_readme(folders):
@@ -66,7 +66,7 @@ def update_readme(folders):
     with open(README_FILE, "w", encoding="utf-8") as f:
         f.write(content)
 
-    print(f"✅ {README_FILE} successfully created with all image galleries.")
+    print(f"✅ {README_FILE} successfully created with latest 6 images per folder.")
 
 # === Run ===
 if __name__ == "__main__":
