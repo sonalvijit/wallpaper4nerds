@@ -3,8 +3,8 @@
 ## Anime
 
 <table>
-<tr><td align="center"><img src="Anime/ANIME_0907202543.jpg" width="300px"><br><sub>ANIME_0907202543.jpg</sub></td><td align="center"><img src="Anime/ANIME_0907202544.jpeg" width="300px"><br><sub>ANIME_0907202544.jpeg</sub></td><td align="center"><img src="Anime/ANIME_0907202546.jpg" width="300px"><br><sub>ANIME_0907202546.jpg</sub></td></tr>
-<tr><td align="center"><img src="Anime/ANIME_1007202501.png" width="300px"><br><sub>ANIME_1007202501.png</sub></td><td align="center"><img src="Anime/ANIME_1007202502.jpg" width="300px"><br><sub>ANIME_1007202502.jpg</sub></td><td align="center"><img src="Anime/ANIME_2209202501.jpg" width="300px"><br><sub>ANIME_2209202501.jpg</sub></td></tr>
+<tr><td align="center"><img src="Anime/ANIME_0907202546.jpg" width="300px"><br><sub>ANIME_0907202546.jpg</sub></td><td align="center"><img src="Anime/ANIME_1007202501.png" width="300px"><br><sub>ANIME_1007202501.png</sub></td><td align="center"><img src="Anime/ANIME_1007202502.jpg" width="300px"><br><sub>ANIME_1007202502.jpg</sub></td></tr>
+<tr><td align="center"><img src="Anime/ANIME_1210202501.jpg" width="300px"><br><sub>ANIME_1210202501.jpg</sub></td><td align="center"><img src="Anime/ANIME_1510202501.jpg" width="300px"><br><sub>ANIME_1510202501.jpg</sub></td><td align="center"><img src="Anime/ANIME_2209202501.jpg" width="300px"><br><sub>ANIME_2209202501.jpg</sub></td></tr>
 <tr></table>
 
 
@@ -56,6 +56,6 @@
 ## Mobile
 
 <table>
-<tr><td align="center"><img src="mobile/MOBILE_0310202501.jpg" width="300px"><br><sub>MOBILE_0310202501.jpg</sub></td></tr></table>
+<tr><td align="center"><img src="mobile/MOBILE_0310202501.jpg" width="300px"><br><sub>MOBILE_0310202501.jpg</sub></td><td align="center"><img src="mobile/MOBILE_1210202501.png" width="300px"><br><sub>MOBILE_1210202501.png</sub></td></tr></table>
 
 
