@@ -3,7 +3,7 @@ import re
 from datetime import datetime
 
 IMAGE_FOLDERS = ["Anime", "Abstract","cgi3d", "Landscape", "Painting", "Pokemon","Real","mobile"]
-IMAGES_EXTENSION = (".jpg", ".jpeg", ".png", ".webp", ".gif")
+IMAGES_EXTENSION = (".jpg", ".jpeg", ".png", ".webp", ".gif","jfif")
 
 def get_files_from_folder(FOLDER:str)->list:
     """
