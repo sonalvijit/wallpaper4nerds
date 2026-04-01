@@ -14,7 +14,8 @@ IMAGE_FOLDERS = [
     "mobile",
     "live wallpaper",
     "Manga_Anime_Cover",
-    "OnePiece"
+    "OnePiece",
+    "fah"
 ]
 
 def convert_webp_to_jpg(folder_path: Path):
