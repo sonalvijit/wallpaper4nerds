@@ -1,7 +1,7 @@
 import os
 
 # === Config ===
-IMAGE_FOLDERS = ["Anime", "Abstract","cgi3d", "Landscape", "Painting", "Pokemon","Real","mobile","Manga_Anime_Cover","OnePiece","fah"]
+IMAGE_FOLDERS = ["Anime", "Abstract","cgi3d", "Landscape", "Painting", "Pokemon","Real","mobile","Manga_Anime_Cover","Manga Panels","OnePiece","fah","coc","moco"]
 README_FILE = "README.md"
 IMAGE_EXTS = (".jpg", ".jpeg", ".png", ".webp", ".gif")
 
