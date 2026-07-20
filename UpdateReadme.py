@@ -1,9 +1,18 @@
 import os
+from dotenv import load_dotenv
 
+load_dotenv()
+
+IMAGE_FOLDERS = os.getenv("IMAGE_FOLDERS", "").split(",")
+
+print(IMAGE_FOLDERS)
 # === Config ===
-IMAGE_FOLDERS = ["Anime", "Abstract","cgi3d", "Landscape", "Painting", "Pokemon","Real","mobile","Manga_Anime_Cover","Manga Panels","OnePiece","fah","coc","moco"]
 README_FILE = "README.md"
-IMAGE_EXTS = (".jpg", ".jpeg", ".png", ".webp", ".gif")
+IMAGE_EXTS = tuple(
+    ext.strip()
+    for ext in os.getenv("IMAGE_EXTS", "").split(",")
+    if ext.strip()
+)
 
 def get_images(folder):
     """Get all supported image files from the folder."""

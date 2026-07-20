@@ -1,23 +1,13 @@
 from pathlib import Path
 from PIL import Image
 import os
+from dotenv import load_dotenv
 
-# List of folders (relative to current working directory)
-IMAGE_FOLDERS = [
-    "Anime",
-    "Abstract",
-    "cgi3d",
-    "Landscape",
-    "Painting",
-    "Pokemon",
-    "Real",
-    "mobile",
-    "live wallpaper",
-    "Manga_Anime_Cover",
-    "Manga Panels",
-    "OnePiece",
-    "fah","coc","moco"
-]
+load_dotenv()
+
+IMAGE_FOLDERS = os.getenv("IMAGE_FOLDERS", "").split(",")
+
+print(IMAGE_FOLDERS)
 
 def convert_webp_to_jpg(folder_path: Path):
     """Convert all .webp files in the given folder (and subfolders) to .jpg and delete original .webp"""
@@ -30,7 +20,7 @@ def convert_webp_to_jpg(folder_path: Path):
 
         # Skip if jpg already exists (safety check)
         if jpg_path.exists():
-            print(f"Already exists, skipping: {jpg_path}")
+            # print(f"Already exists, skipping: {jpg_path}")
             count_skipped += 1
             continue
 

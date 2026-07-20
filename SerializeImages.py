@@ -1,9 +1,19 @@
-from os import path, listdir, rename, walk
+from os import path, listdir, rename, walk, getenv
 import re
 from datetime import datetime
+from dotenv import load_dotenv
 
-IMAGE_FOLDERS = ["Anime", "Abstract","cgi3d", "Landscape", "Painting", "Pokemon","Real","mobile","live wallpaper","Manga_Anime_Cover","Manga Panels","OnePiece","fah","coc","moco","Valorant","Idols"]
-IMAGES_EXTENSION = (".jpg", ".jpeg", ".png", ".webp", ".gif","jfif","mp4")
+load_dotenv()
+
+IMAGE_FOLDERS = getenv("IMAGE_FOLDERS", "").split(",")
+
+print(IMAGE_FOLDERS)
+# IMAGE_FOLDERS = ["Anime", "Abstract","cgi3d", "Landscape", "Painting", "Pokemon","Real","mobile","live wallpaper","Manga_Anime_Cover","Manga Panels","OnePiece","fah","coc","moco","Valorant","Idols"]
+IMAGES_EXTENSION = IMAGE_EXTS = tuple(
+    ext.strip()
+    for ext in getenv("IMAGE_EXTS", "").split(",")
+    if ext.strip()
+)
 
 # def get_files_from_folder(FOLDER:str)->list:
 #     """
@@ -65,7 +75,18 @@ def save_filename(old_filename:str, new_filename:str):
     except FileNotFoundError:
         print(f"File not found: {old_filename}")
     except FileExistsError:
-        print(f"File already exists: {new_filename}")
+        try:
+            # If the new filename already exists, append a unique suffix
+            base, ext = path.splitext(new_filename)
+            counter = 1
+            while path.exists(new_filename):
+                new_filename = f"{base}_{counter}{ext}"
+                counter += 1
+            rename(old_filename, new_filename)
+            print(f"Renamed with unique suffix: {old_filename} -> {new_filename}")
+        except Exception as e:
+            print(f"Error renaming file with unique suffix: {e}")
+        # print(f"File already exists: {new_filename}")
     except Exception as e:
         print(f"Error renaming file: {e}")
 
