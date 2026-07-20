@@ -8,24 +8,11 @@ load_dotenv()
 IMAGE_FOLDERS = getenv("IMAGE_FOLDERS", "").split(",")
 
 print(IMAGE_FOLDERS)
-# IMAGE_FOLDERS = ["Anime", "Abstract","cgi3d", "Landscape", "Painting", "Pokemon","Real","mobile","live wallpaper","Manga_Anime_Cover","Manga Panels","OnePiece","fah","coc","moco","Valorant","Idols"]
 IMAGES_EXTENSION = IMAGE_EXTS = tuple(
     ext.strip()
     for ext in getenv("IMAGE_EXTS", "").split(",")
     if ext.strip()
 )
-
-# def get_files_from_folder(FOLDER:str)->list:
-#     """
-#     Return a sorted list of image files from a folder with supported extensions.
-#     """
-#     if not path.isdir(FOLDER):
-#         print(f"Folder not found: {FOLDER}")
-#         return []
-#     return sorted([
-#         f for f in listdir(FOLDER)
-#         if path.isfile(path.join(FOLDER, f)) and f.lower().endswith(IMAGES_EXTENSION)
-#     ])
 
 def get_files_from_folder(FOLDER: str) -> list:
     """
@@ -75,18 +62,7 @@ def save_filename(old_filename:str, new_filename:str):
     except FileNotFoundError:
         print(f"File not found: {old_filename}")
     except FileExistsError:
-        try:
-            # If the new filename already exists, append a unique suffix
-            base, ext = path.splitext(new_filename)
-            counter = 1
-            while path.exists(new_filename):
-                new_filename = f"{base}_{counter}{ext}"
-                counter += 1
-            rename(old_filename, new_filename)
-            print(f"Renamed with unique suffix: {old_filename} -> {new_filename}")
-        except Exception as e:
-            print(f"Error renaming file with unique suffix: {e}")
-        # print(f"File already exists: {new_filename}")
+        print(f"File already exists: {new_filename}")
     except Exception as e:
         print(f"Error renaming file: {e}")
 
@@ -103,26 +79,20 @@ def serialize_filename(parent_folder:str)->int:
     today = datetime.now().strftime("%d%m%Y")
     serials = []
 
-    for filename in listdir(parent_folder):
-        name, _ = path.splitext(filename)
+    for root, _, files in walk(parent_folder):
+        for filename in files:
+            name, _ = path.splitext(filename)
 
-        pattern = rf"^{folder_prefix}_{today}(\d{{2}})$"
-        match = re.fullmatch(pattern, name, re.IGNORECASE)
-        if match:
-            try:
-                serials.append(int(match.group(1)))
-            except ValueError:
-                continue
+            pattern = rf"^{folder_prefix}_{today}(\d{{2}})$"
+            match = re.fullmatch(pattern, name, re.IGNORECASE)
+
+            if match:
+                try:
+                    serials.append(int(match.group(1)))
+                except ValueError:
+                    continue
 
     return max(serials, default=0) + 1
-
-# def run():
-#     for folder_name in IMAGE_FOLDERS:
-#         a = get_files_from_folder(folder_name)
-#         for f in a:
-#             if not check_filename(path.basename(f), folder_name):
-#                 s1 = change_filename(f, folder_name, serialize_filename(folder_name))
-#                 save_filename(f"{folder_name}/{f}",f"{folder_name}/{s1}")
 
 def run():
     for folder_name in IMAGE_FOLDERS:
@@ -141,21 +111,5 @@ def run():
                 f,
                 path.join(path.dirname(f), new_name)
             )
-
-# def run():
-#     for folder_name in IMAGE_FOLDERS:
-#         files = get_files_from_folder(folder_name)
-
-#         for f in files:
-#             filename = path.basename(f)
-
-#             if not check_filename(filename, folder_name):
-#                 serial = serialize_filename(folder_name)
-#                 new_name = change_filename(filename, folder_name, serial)
-
-#                 old_path = f
-#                 new_path = path.join(path.dirname(f), new_name)
-
-#                 save_filename(old_path, new_path)
                 
 run()
