@@ -1,21 +1,38 @@
-from os import path, listdir, rename
+from os import path, listdir, rename, walk
 import re
 from datetime import datetime
 
-IMAGE_FOLDERS = ["Anime", "Abstract","cgi3d", "Landscape", "Painting", "Pokemon","Real","mobile","live wallpaper","Manga_Anime_Cover","Manga Panels","OnePiece","fah","coc","moco"]
+IMAGE_FOLDERS = ["Anime", "Abstract","cgi3d", "Landscape", "Painting", "Pokemon","Real","mobile","live wallpaper","Manga_Anime_Cover","Manga Panels","OnePiece","fah","coc","moco","Valorant","Idols"]
 IMAGES_EXTENSION = (".jpg", ".jpeg", ".png", ".webp", ".gif","jfif","mp4")
 
-def get_files_from_folder(FOLDER:str)->list:
+# def get_files_from_folder(FOLDER:str)->list:
+#     """
+#     Return a sorted list of image files from a folder with supported extensions.
+#     """
+#     if not path.isdir(FOLDER):
+#         print(f"Folder not found: {FOLDER}")
+#         return []
+#     return sorted([
+#         f for f in listdir(FOLDER)
+#         if path.isfile(path.join(FOLDER, f)) and f.lower().endswith(IMAGES_EXTENSION)
+#     ])
+
+def get_files_from_folder(FOLDER: str) -> list:
     """
-    Return a sorted list of image files from a folder with supported extensions.
+    Return a sorted list of image file paths from a folder and all its subfolders.
     """
     if not path.isdir(FOLDER):
         print(f"Folder not found: {FOLDER}")
         return []
-    return sorted([
-        f for f in listdir(FOLDER)
-        if path.isfile(path.join(FOLDER, f)) and f.lower().endswith(IMAGES_EXTENSION)
-    ])
+
+    image_files = []
+
+    for root, _, files in walk(FOLDER):
+        for file in files:
+            if file.lower().endswith(IMAGES_EXTENSION):
+                image_files.append(path.join(root, file))
+
+    return sorted(image_files)
 
 def check_filename(filename:str, parent_folder:str)->bool:
     """
@@ -78,12 +95,46 @@ def serialize_filename(parent_folder:str)->int:
 
     return max(serials, default=0) + 1
 
+# def run():
+#     for folder_name in IMAGE_FOLDERS:
+#         a = get_files_from_folder(folder_name)
+#         for f in a:
+#             if not check_filename(path.basename(f), folder_name):
+#                 s1 = change_filename(f, folder_name, serialize_filename(folder_name))
+#                 save_filename(f"{folder_name}/{f}",f"{folder_name}/{s1}")
+
 def run():
     for folder_name in IMAGE_FOLDERS:
-        a = get_files_from_folder(folder_name)
-        for f in a:
-            if not check_filename(f, folder_name):
-                s1 = change_filename(f, folder_name, serialize_filename(folder_name))
-                save_filename(f"{folder_name}/{f}",f"{folder_name}/{s1}")
+        serial = serialize_filename(folder_name)
 
+        for f in get_files_from_folder(folder_name):
+            filename = path.basename(f)
+
+            if check_filename(filename, folder_name):
+                continue
+
+            new_name = change_filename(filename, folder_name, serial)
+            serial += 1
+
+            save_filename(
+                f,
+                path.join(path.dirname(f), new_name)
+            )
+
+# def run():
+#     for folder_name in IMAGE_FOLDERS:
+#         files = get_files_from_folder(folder_name)
+
+#         for f in files:
+#             filename = path.basename(f)
+
+#             if not check_filename(filename, folder_name):
+#                 serial = serialize_filename(folder_name)
+#                 new_name = change_filename(filename, folder_name, serial)
+
+#                 old_path = f
+#                 new_path = path.join(path.dirname(f), new_name)
+
+#                 save_filename(old_path, new_path)
+                
 run()
