@@ -10,6 +10,7 @@ from urllib.parse import urljoin, urlparse
 from PIL import Image, PngImagePlugin
 from playwright.async_api import async_playwright
 
+# python image_downloader.py -u "https://jeonsomi.bstage.in/contents/6a83c63dc870ce7ed4ca3622" -c "JEON SOMI — 'Vogue Thailand 8월호' BEHIND PHOTOS. Originally posted by @somi_official_ on X on August 19, 2026. X post: https://x.com/somi_official_/status/2089957945048178774. Source: https://jeonsomi.bstage.in/contents/6a83c63dc870ce7ed4ca3622"
 
 IMAGE_EXTENSIONS = {
     ".jpg", ".jpeg", ".png", ".webp", ".gif",
