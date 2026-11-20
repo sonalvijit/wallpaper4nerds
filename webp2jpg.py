@@ -7,71 +7,56 @@ load_dotenv()
 
 IMAGE_FOLDERS = os.getenv("IMAGE_FOLDERS", "").split(",")
 
-print(IMAGE_FOLDERS)
 
 def convert_webp_to_jpg(folder_path: Path):
-    """Convert all .webp files in the given folder (and subfolders) to .jpg and delete original .webp"""
-    count_converted = 0
-    count_skipped = 0
-    count_errors = 0
+    """Convert WebP files to JPG and print only successful conversions."""
+
+    converted_count = 0
 
     for webp_path in folder_path.glob("**/*.webp"):
         jpg_path = webp_path.with_suffix(".jpg")
 
-        # Skip if jpg already exists (safety check)
+        # Skip if JPG already exists
         if jpg_path.exists():
-            # print(f"Already exists, skipping: {jpg_path}")
-            count_skipped += 1
             continue
 
         try:
             with Image.open(webp_path) as img:
-                # Convert to RGB if it has transparency/alpha channel
-                if img.mode in ("RGBA", "LA") or (img.mode == "P" and "transparency" in img.info):
+                if img.mode != "RGB":
                     img = img.convert("RGB")
 
-                img.save(jpg_path, "JPEG", quality=92)   # quality 92 is good balance of size & quality
-                print(f"Converted: {webp_path} → {jpg_path}")
+                img.save(jpg_path, "JPEG", quality=92)
 
-            # Delete the original .webp file after successful save
-            os.remove(webp_path)
-            print(f"  → deleted original: {webp_path.name}")
+            # Delete original only after successful conversion
+            webp_path.unlink()
 
-            count_converted += 1
+            print(f"Converted: {webp_path} → {jpg_path}")
+            converted_count += 1
 
-        except Exception as e:
-            print(f"Error processing {webp_path}: {e}")
-            count_errors += 1
-            # Do NOT delete if conversion failed
+        except Exception:
+            pass
 
-    print(f"\nFolder: {folder_path.name}")
-    print(f"  Converted & deleted: {count_converted}")
-    print(f"  Skipped (already exist): {count_skipped}")
-    print(f"  Errors: {count_errors}\n")
+    return converted_count
 
 
 def main():
     root = Path.cwd()
-
-    print("Current working directory:", root)
-    print("Looking for folders:", ", ".join(IMAGE_FOLDERS))
-    print("-" * 60)
-
-    found_any_folder = False
+    total_converted = 0
 
     for folder_name in IMAGE_FOLDERS:
-        folder = root / folder_name
+        folder_name = folder_name.strip()
 
-        if not folder.is_dir():
-            print(f"Folder not found, skipping: {folder_name}")
+        if not folder_name:
             continue
 
-        found_any_folder = True
-        print(f"\nProcessing folder: {folder_name}")
-        convert_webp_to_jpg(folder)
+        folder = root / folder_name
 
-    if not found_any_folder:
-        print("\nNone of the listed folders were found in the current directory.")
+        if folder.is_dir():
+            total_converted += convert_webp_to_jpg(folder)
+
+    # Print only when nothing was converted
+    if total_converted == 0:
+        print("No changes detected")
 
 
 if __name__ == "__main__":

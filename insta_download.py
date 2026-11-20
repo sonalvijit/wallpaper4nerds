@@ -1,77 +1,59 @@
-
-import instaloader
+from pathlib import Path
 import argparse
 import re
-import sys
+import shutil
+
+import instaloader
 import piexif
-import yt_dlp
-
-from pathlib import Path
 
 
-DOWNLOAD_DIR = Path("Instagram_Downloads")
+DEFAULT_DOWNLOAD_DIR = Path("Instagram_Downloads")
 
 
-def embed_metadata(image_path, username, post_url, shortcode):
-    try:
-        exif = piexif.load(str(image_path))
+def organize_miscellaneous(download_dir: Path):
+    """Move TXT files into the miscellaneous folder."""
 
-        description = (
-            f"Instagram: @{username}\n"
-            f"Post URL: {post_url}\n"
-            f"Shortcode: {shortcode}"
-        )
+    misc_dir = download_dir / "miscellaneous"
+    txt_files = list(download_dir.glob("*.txt"))
 
-        exif["0th"][piexif.ImageIFD.Artist] = (
-            f"@{username}".encode("utf-8")
-        )
+    if not txt_files:
+        return
 
-        exif["0th"][piexif.ImageIFD.ImageDescription] = (
-            description.encode("utf-8")
-        )
+    misc_dir.mkdir(parents=True, exist_ok=True)
 
-        exif["Exif"][piexif.ExifIFD.UserComment] = (
-            b"ASCII\x00\x00\x00" + description.encode("ascii")
-        )
+    for file in txt_files:
+        destination = misc_dir / file.name
 
-        piexif.insert(piexif.dump(exif), str(image_path))
+        if destination.exists():
+            destination = misc_dir / f"{file.stem}_copy{file.suffix}"
 
-        print(f"[META] Embedded metadata: {image_path.name}")
-
-    except Exception as e:
-        print(f"[WARNING] Could not embed metadata: {e}")
+        shutil.move(str(file), str(destination))
 
 
-def fallback_download(url, mp4_only=False):
-    """Download content using yt-dlp if Instaloader fails."""
-
-    print("\n[FALLBACK] Trying alternative downloader...")
-    print("[INFO] Downloading without Instagram metadata.")
-
-    DOWNLOAD_DIR.mkdir(parents=True, exist_ok=True)
-
-    options = {
-        "outtmpl": str(DOWNLOAD_DIR / "%(id)s.%(ext)s"),
-        "format": "best[ext=mp4]" if mp4_only else "best",
-        "merge_output_format": "mp4",
-        "noplaylist": False,
-        "quiet": False,
-        "no_warnings": False,
-        "overwrites": False,
-    }
+def embed_metadata(image_path: Path, username: str, post_url: str):
+    """Embed Instagram information into JPEG EXIF metadata."""
 
     try:
-        with yt_dlp.YoutubeDL(options) as downloader:
-            downloader.download([url])
+        exif_dict = piexif.load(str(image_path))
 
-        print("\n[SUCCESS] Fallback download completed!")
+        exif_dict["0th"][piexif.ImageIFD.Artist] = username.encode("utf-8")
+        exif_dict["0th"][piexif.ImageIFD.ImageDescription] = (
+            post_url.encode("utf-8")
+        )
 
-    except Exception as e:
-        print(f"\n[ERROR] Fallback download also failed: {e}")
-        print("[INFO] The post may require authentication or be unavailable.")
+        exif_dict["Exif"][piexif.ExifIFD.UserComment] = (
+            b"ASCII\x00\x00\x00" + post_url.encode("utf-8")
+        )
+
+        exif_bytes = piexif.dump(exif_dict)
+        piexif.insert(exif_bytes, str(image_path))
+
+    except Exception:
+        pass
 
 
-def download_post(url, mp4_only=False):
+def download_post(url: str, download_dir: Path, mp4_only: bool = False):
+    """Download an authorized/public post using Instaloader."""
 
     match = re.search(
         r"instagram\.com/(p|reel|tv)/([A-Za-z0-9_-]+)",
@@ -79,94 +61,128 @@ def download_post(url, mp4_only=False):
     )
 
     if not match:
-        print("[ERROR] Invalid Instagram URL.")
-        sys.exit(1)
+        print(f"Invalid Instagram URL: {url}")
+        return False
 
-    content_type = match.group(1)
     shortcode = match.group(2)
 
-    post_url = (
-        f"https://www.instagram.com/{content_type}/{shortcode}/"
-    )
+    canonical_url = f"https://www.instagram.com/p/{shortcode}/"
 
-    DOWNLOAD_DIR.mkdir(parents=True, exist_ok=True)
+    download_dir.mkdir(parents=True, exist_ok=True)
 
     loader = instaloader.Instaloader(
-        dirname_pattern=str(DOWNLOAD_DIR),
+        dirname_pattern=str(download_dir),
         filename_pattern="{shortcode}_{mediaid}",
         download_pictures=not mp4_only,
         download_videos=True,
         download_video_thumbnails=False,
+        download_geotags=False,
         download_comments=False,
-        save_metadata=False
+        save_metadata=False,
+        compress_json=False,
     )
 
     try:
-        print(f"\n[INFO] Post: {post_url}")
-        print("[INFO] Fetching Instagram metadata...")
-
-        post = instaloader.Post.from_shortcode(
-            loader.context,
-            shortcode
-        )
+        post = instaloader.Post.from_shortcode(loader.context, shortcode)
 
         username = post.owner_username
 
-        print(f"[INFO] Instagram Handle: @{username}")
-        print("[INFO] Downloading content...")
+        print(f"Downloading: @{username}")
+        print(f"Post: {canonical_url}")
 
         loader.download_post(post, target=shortcode)
 
         # Embed metadata into downloaded JPEG images
         if not mp4_only:
-            images = [
-                file for file in DOWNLOAD_DIR.iterdir()
-                if file.is_file()
-                and file.name.startswith(shortcode + "_")
-                and file.suffix.lower() in (".jpg", ".jpeg")
-            ]
-
-            for image_path in images:
+            for image_path in download_dir.glob(f"{shortcode}_*.jpg"):
                 embed_metadata(
                     image_path,
                     username,
-                    post_url,
-                    shortcode
+                    canonical_url
                 )
 
-        print("\n[SUCCESS] Download completed!")
-
-    except instaloader.exceptions.InstaloaderException as e:
-        print(f"\n[WARNING] Instaloader failed: {e}")
-        fallback_download(url, mp4_only)
+        return True
 
     except Exception as e:
-        print(f"\n[WARNING] Download failed: {e}")
-        fallback_download(url, mp4_only)
+        print(f"Download failed: {e}")
+        return False
+
+
+def download_multiple(urls, download_dir: Path, mp4_only: bool = False):
+    """Process multiple Instagram URLs."""
+
+    total = len(urls)
+    successful = 0
+    failed = 0
+
+    print("\n" + "=" * 50)
+    print(f"       BATCH DOWNLOAD: {total} POSTS")
+    print("=" * 50)
+
+    for index, url in enumerate(urls, start=1):
+        print(f"\n[{index}/{total}] Processing URL:")
+        print(url)
+
+        result = download_post(
+            url,
+            download_dir,
+            mp4_only
+        )
+
+        if result:
+            successful += 1
+        else:
+            failed += 1
+
+    organize_miscellaneous(download_dir)
+
+    print("\n" + "=" * 50)
+    print("             DOWNLOAD SUMMARY")
+    print("=" * 50)
+    print(f"Successful: {successful}")
+    print(f"Failed:    {failed}")
+    print(f"Total:     {total}")
+    print(f"Location:  {download_dir.resolve()}")
+    print("=" * 50)
 
 
 def main():
-
     parser = argparse.ArgumentParser(
-        description="Instagram Downloader with Metadata and Fallback"
+        description="Instagram batch downloader"
     )
 
     parser.add_argument(
-        "-u",
-        "--url",
+        "-u", "--url",
+        nargs="+",
         required=True,
-        help="Instagram post URL"
+        help="One or more Instagram URLs"
     )
 
     parser.add_argument(
         "--mp4",
         action="store_true",
-        help="Download MP4 videos only"
+        help="Download videos only"
+    )
+
+    parser.add_argument(
+        "-d", "--directory",
+        type=str,
+        default=str(DEFAULT_DOWNLOAD_DIR),
+        help="Destination folder"
     )
 
     args = parser.parse_args()
 
-    download_post(args.url, args.mp4)
+    # Clean accidental surrounding quotes and trailing separators
+    directory_string = args.directory.strip().strip('"').strip("'")
+
+    download_dir = Path(directory_string)
+
+    download_multiple(
+        args.url,
+        download_dir,
+        args.mp4
+    )
 
 
 if __name__ == "__main__":
