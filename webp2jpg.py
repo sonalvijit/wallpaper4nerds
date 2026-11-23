@@ -22,37 +22,46 @@ def separator():
     print(f"{C.LIGHTBLACK_EX}{'─' * 58}")
 
 
-def convert_webp_to_jpg(folder_path: Path):
-    """Convert WebP files to JPG and return successful conversions."""
+def convert_images_to_jpg(folder_path: Path, extensions):
+    """Convert supported image formats to JPG and return successful conversions."""
 
     converted_files = []
 
-    for webp_path in folder_path.glob("**/*.webp"):
+    for extension in extensions:
 
-        jpg_path = webp_path.with_suffix(".jpg")
+        for image_path in folder_path.glob(f"**/*.{extension}"):
 
-        # Skip if JPG already exists
-        if jpg_path.exists():
-            continue
+            jpg_path = image_path.with_suffix(".jpg")
 
-        try:
-            with Image.open(webp_path) as img:
+            # Skip if JPG already exists
+            if jpg_path.exists():
+                continue
 
-                if img.mode != "RGB":
-                    img = img.convert("RGB")
+            try:
+                with Image.open(image_path) as img:
 
-                img.save(jpg_path, "JPEG", quality=92)
+                    # GIF: Convert only the first frame
+                    if extension == "gif":
+                        img.seek(0)
 
-            # Delete original only after successful conversion
-            webp_path.unlink()
+                    # Convert image to RGB
+                    if img.mode != "RGB":
+                        img = img.convert("RGB")
 
-            converted_files.append((webp_path, jpg_path))
+                    img.save(jpg_path, "JPEG", quality=92)
 
-        except Exception as e:
-            print(
-                f"{C.RED}[ERROR] {S.RESET_ALL}"
-                f"{webp_path.name}: {e}"
-            )
+                # Delete original only after successful conversion
+                image_path.unlink()
+
+                converted_files.append(
+                    (extension.upper(), image_path, jpg_path)
+                )
+
+            except Exception as e:
+                print(
+                    f"{C.RED}[ERROR] {S.RESET_ALL}"
+                    f"{image_path.name}: {e}"
+                )
 
     return converted_files
 
@@ -61,6 +70,8 @@ def main():
 
     root = Path.cwd()
 
+    extensions = ["webp", "jfif"]
+
     for folder_name in IMAGE_FOLDERS:
 
         folder = root / folder_name
@@ -68,7 +79,7 @@ def main():
         if not folder.is_dir():
             continue
 
-        converted_files = convert_webp_to_jpg(folder)
+        converted_files = convert_images_to_jpg(folder, extensions)
 
         # Display folder information only if changes occurred
         if converted_files:
@@ -80,11 +91,11 @@ def main():
 
             separator()
 
-            for webp_path, jpg_path in converted_files:
+            for extension, image_path, jpg_path in converted_files:
 
                 print(
                     f"{C.GREEN}[CONVERTED] {S.RESET_ALL}"
-                    f"{webp_path.name} → "
+                    f"{extension}: {image_path.name} → "
                     f"{C.CYAN}{jpg_path.name}"
                 )
 
