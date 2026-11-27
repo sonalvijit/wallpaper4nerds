@@ -132,18 +132,22 @@ def get_folder_prefix(parent_folder: str, file_path: str) -> str:
 # FILENAME VALIDATION
 # ============================================================
 
-def check_filename(filename: str, parent_folder: str) -> bool:
-    """Check hierarchical filename format."""
+def check_filename(file_path: str, parent_folder: str) -> bool:
+    """
+    Check whether the filename follows the hierarchical format.
 
+    Uses the actual file path to preserve subdirectory information.
+    """
+
+    filename = os.path.basename(file_path)
     name, _ = os.path.splitext(filename)
 
-    # The file's parent directory determines its prefix.
     prefix = get_folder_prefix(
         parent_folder,
-        os.path.join(parent_folder, filename)
+        file_path
     )
 
-    pattern = rf"^{re.escape(prefix)}_\d{{10}}$"
+    pattern = rf"^{re.escape(prefix)}_\d{{10,}}$"
 
     return re.fullmatch(
         pattern,
@@ -186,8 +190,7 @@ def save_filename(old_filename: str, new_filename: str) -> bool:
     try:
         if os.path.exists(new_filename):
             warning(
-                f"Destination already exists: "
-                f"{new_filename}"
+                f"Destination already exists: {new_filename}"
             )
             return False
 
@@ -196,7 +199,9 @@ def save_filename(old_filename: str, new_filename: str) -> bool:
         old = os.path.basename(old_filename)
         new = os.path.basename(new_filename)
 
-        success(f"{highlight(old)} → {C.GREEN}{S.BRIGHT}{new}")
+        success(
+            f"{highlight(old)} → {C.GREEN}{S.BRIGHT}{new}"
+        )
 
         return True
 
@@ -216,7 +221,7 @@ def save_filename(old_filename: str, new_filename: str) -> bool:
 def serialize_filename(parent_folder: str, file_path: str) -> int:
     """
     Return the next available serial number for today's files
-    within the same hierarchical folder.
+    within the same directory and hierarchical prefix.
     """
 
     if not os.path.isdir(parent_folder):
@@ -234,6 +239,10 @@ def serialize_filename(parent_folder: str, file_path: str) -> int:
 
     directory = os.path.dirname(file_path)
 
+    pattern = (
+        rf"^{re.escape(prefix)}_{today}(\d{{2,}})$"
+    )
+
     for filename in os.listdir(directory):
 
         full_path = os.path.join(directory, filename)
@@ -242,10 +251,6 @@ def serialize_filename(parent_folder: str, file_path: str) -> int:
             continue
 
         name, _ = os.path.splitext(filename)
-
-        pattern = (
-            rf"^{re.escape(prefix)}_{today}(\d{{2}})$"
-        )
 
         match = re.fullmatch(
             pattern,
@@ -279,8 +284,13 @@ def run():
     total_skipped = 0
     total_errors = 0
 
-    info(f"Date: {highlight(datetime.now().strftime('%d-%m-%Y'))}")
-    info(f"Extensions: {highlight(', '.join(IMAGE_EXTENSIONS))}")
+    info(
+        f"Date: {highlight(datetime.now().strftime('%d-%m-%Y'))}"
+    )
+
+    info(
+        f"Extensions: {highlight(', '.join(IMAGE_EXTENSIONS))}"
+    )
 
     separator()
 
@@ -304,13 +314,14 @@ def run():
 
             filename = os.path.basename(file_path)
 
-            if check_filename(filename, folder_name):
+            # Skip already correctly named files.
+            if check_filename(file_path, folder_name):
                 total_skipped += 1
                 continue
 
             directory = os.path.dirname(file_path)
 
-            # Generate a counter for this folder hierarchy.
+            # Generate a counter for this directory.
             if directory not in serial_counters:
                 serial_counters[directory] = serialize_filename(
                     folder_name,
@@ -346,15 +357,20 @@ def run():
     separator()
 
     print(f"{C.CYAN}{S.BRIGHT}              PROCESS COMPLETED")
+
     separator()
 
     print(f"{C.GREEN}[✓] Successfully renamed : {total_renamed}")
-    print(f"{C.BLUE}[↷] Skipped files        : {total_skipped}")
-    print(f"{C.RED}[✗] Failed operations   : {total_errors}")
+    print(f"{C.BLUE}[↷] Skipped files         : {total_skipped}")
+    print(f"{C.RED}[✗] Failed operations      : {total_errors}")
 
     separator()
 
-    print(f"{C.GREEN}{S.BRIGHT}Thank you for using Image File Renamer!")
+    print(
+        f"{C.GREEN}{S.BRIGHT}"
+        "Thank you for using Image File Renamer!"
+    )
+
     print()
 
 
